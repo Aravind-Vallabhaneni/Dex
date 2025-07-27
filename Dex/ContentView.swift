@@ -37,87 +37,110 @@ struct ContentView: View {
     }
     
     var body: some View {
-        NavigationStack{
-            List {
-                ForEach(pokedex) { pokemon in
-                    NavigationLink(value: pokemon) {
-                        AsyncImage(url: pokemon.sprite) { image in
-                            image
-                                .resizable()
-                                .scaledToFit()
-                            
-                        } placeholder: {
-                            ProgressView()
-                        }
-                        .frame(width: 100, height: 100)
-                        
-                        VStack(alignment: .leading) {
-                            HStack {
-                                Text(pokemon.name!.capitalized)
-                                    .fontWeight(.bold)
+        if pokedex.isEmpty {
+            ContentUnavailableView {
+                Label("Missing Pokemon", image: .nopokemon)
+            } description: {
+                Text("There aren't any pokemons yet.\nFetch some pokemons to get started!")
+            } actions: {
+                Button("Fetch Pokemon", systemImage: "antenna.radiowaves.left.and.right") {
+                    getPokemon(from: 1)
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            
+        } else {
+            NavigationStack{
+                List {
+                    Section {
+                        ForEach(pokedex) { pokemon in
+                            NavigationLink(value: pokemon) {
+                                AsyncImage(url: pokemon.sprite) { image in
+                                    image
+                                        .resizable()
+                                        .scaledToFit()
+                                    
+                                } placeholder: {
+                                    ProgressView()
+                                }
+                                .frame(width: 100, height: 100)
                                 
-                                if pokemon.favorite {
-                                    Image(systemName: "star.fill")
-                                        .foregroundStyle(.yellow)
+                                VStack(alignment: .leading) {
+                                    HStack {
+                                        Text(pokemon.name!.capitalized)
+                                            .fontWeight(.bold)
+                                        
+                                        if pokemon.favorite {
+                                            Image(systemName: "star.fill")
+                                                .foregroundStyle(.yellow)
+                                        }
+                                    }
+                                    HStack {
+                                        ForEach(pokemon.types!, id: \.self) { type in
+                                            Text(type)
+                                                .fontWeight(.semibold)
+                                                .font(.subheadline)
+                                                .foregroundStyle(.black)
+                                                .padding(.horizontal, 13)
+                                                .padding(.vertical, 5)
+                                                .background(Color(type.capitalized))
+                                                .clipShape(.capsule)
+                                            
+                                        }
+                                    }
                                 }
                             }
-                            HStack {
-                                ForEach(pokemon.types!, id: \.self) { type in
-                                    Text(type)
-                                        .fontWeight(.semibold)
-                                        .font(.subheadline)
-                                        .foregroundStyle(.black)
-                                        .padding(.horizontal, 13)
-                                        .padding(.vertical, 5)
-                                        .background(Color(type.capitalized))
-                                        .clipShape(.capsule)
-                                        
+                        }
+                    } footer: {
+                        
+                        if pokedex.count < 151 {
+                            ContentUnavailableView {
+                                Label("Missing Pokemon", image: .nopokemon)
+                            } description: {
+                                Text("The fetch was interrupted!\nFetch rest of the pokemons.")
+                            } actions: {
+                                Button("Fetch Pokemon",  systemImage: "antenna.radiowaves.left.and.right") {
+                                    getPokemon(from: pokedex.count + 1)
                                 }
+                                .buttonStyle(.borderedProminent)
                             }
                         }
                     }
                 }
-               
-            }
-            .navigationTitle("Pokedex")
-            .searchable(text: $searchText, prompt: "find a pokemon")
-            .autocorrectionDisabled()
-            .onChange(of: searchText){
-                pokedex.nsPredicate = DynamicPredicate
-            }
-            .onChange(of: favorites) {
-                pokedex.nsPredicate = DynamicPredicate
-            }
-            .navigationDestination(for: Pokemon.self) { pokemon in
-                Text(pokemon.name!)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        favorites.toggle()
-                    } label: {
-                        Label("favorites", systemImage: favorites ? "star.fill" : "star")
-                    }
-                    .tint(.yellow)
+                .navigationTitle("Pokedex")
+                .searchable(text: $searchText, prompt: "find a pokemon")
+                .autocorrectionDisabled()
+                .onChange(of: searchText){
+                    pokedex.nsPredicate = DynamicPredicate
                 }
-                ToolbarItem {
-                    Button("Add Item", systemImage: "plus") {
-                        getPokemon()
+                .onChange(of: favorites) {
+                    pokedex.nsPredicate = DynamicPredicate
+                }
+                .navigationDestination(for: Pokemon.self) { pokemon in
+                    Text(pokemon.name!)
+                }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button {
+                            favorites.toggle()
+                        } label: {
+                            Label("favorites", systemImage: favorites ? "star.fill" : "star")
+                        }
+                        .tint(.yellow)
                     }
                 }
             }
+           
         }
-        .preferredColorScheme(.light)
-        
     }
 
     
-    private func getPokemon() {
+    private func getPokemon(from id: Int) {
         
         Task {
-            for id in 1..<152 {
+            for i in id..<152 {
                 do {
-                  let fetchedPokemon = try await fetcher.fetchPokemon(id)
+                  let fetchedPokemon = try await fetcher.fetchPokemon(i)
                     
                     let pokemon = Pokemon(context: viewContext)
                     
@@ -133,7 +156,9 @@ struct ContentView: View {
                     pokemon.hp = fetchedPokemon.hp
                     pokemon.types = fetchedPokemon.types
                     
-                    
+                    if pokemon.id % 2 == 0 {
+                        pokemon.favorite = true
+                    }
                     try viewContext.save()
                 } catch {
                     print(error)
