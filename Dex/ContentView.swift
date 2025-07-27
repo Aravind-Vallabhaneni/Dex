@@ -11,6 +11,7 @@ import CoreData
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
 
+    @FetchRequest<Pokemon>(sortDescriptors: []) private var allPokemons
     @FetchRequest<Pokemon>(
         sortDescriptors: [SortDescriptor(\.id)],
         animation: .default
@@ -29,6 +30,7 @@ struct ContentView: View {
             predicate.append(NSPredicate(format: "name contains[c] %@" ,searchText))
         }
         
+        // predicate for the favorites
         if favorites {
             predicate.append(NSPredicate(format: "favorite == %d", true))
         }
@@ -37,7 +39,7 @@ struct ContentView: View {
     }
     
     var body: some View {
-        if pokedex.isEmpty {
+        if allPokemons.isEmpty {
             ContentUnavailableView {
                 Label("Missing Pokemon", image: .nopokemon)
             } description: {
@@ -90,10 +92,21 @@ struct ContentView: View {
                                     }
                                 }
                             }
+                            .swipeActions{
+                                Button(pokemon.favorite ? "Remove from fravorites" : "Add to favorites", systemImage: "star") {
+                                    pokemon.favorite.toggle()
+                                    do {
+                                        try viewContext.save()
+                                    } catch {
+                                        print(error)
+                                    }
+                                }
+                                .tint(pokemon.favorite ? .red : .yellow)
+                            }
                         }
                     } footer: {
                         
-                        if pokedex.count < 151 {
+                        if allPokemons.count < 151 {
                             ContentUnavailableView {
                                 Label("Missing Pokemon", image: .nopokemon)
                             } description: {
@@ -156,9 +169,7 @@ struct ContentView: View {
                     pokemon.hp = fetchedPokemon.hp
                     pokemon.types = fetchedPokemon.types
                     
-                    if pokemon.id % 2 == 0 {
-                        pokemon.favorite = true
-                    }
+                    
                     try viewContext.save()
                 } catch {
                     print(error)
