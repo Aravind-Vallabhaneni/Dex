@@ -71,6 +71,7 @@ struct ContentView: View {
             }
             .navigationTitle("Pokedex")
             .searchable(text: $searchText, prompt: "find a pokemon")
+            .autocorrectionDisabled()
             .onChange(of: searchText){
                 pokedex.nsPredicate = DynamicPredicate
             }
@@ -88,6 +89,7 @@ struct ContentView: View {
                 }
             }
         }
+        .preferredColorScheme(.light)
     }
 
     
@@ -121,6 +123,7 @@ struct ContentView: View {
     }
 
 }
+    
 
 
 
