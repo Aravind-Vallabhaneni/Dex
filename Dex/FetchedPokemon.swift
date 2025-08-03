@@ -65,6 +65,11 @@ struct FetchedPokemon: Decodable {
             let type = try typekeys.decode(String.self, forKey: .name)
             tempTypes.append(type)
         }
+        
+        if tempTypes.count == 2 && tempTypes[0] == "normal" {
+            tempTypes.swapAt(0, 1)
+        }
+        
         types = tempTypes
         
         var stats: [Int16] = []
