@@ -130,7 +130,7 @@ struct ContentView: View {
                     pokedex.nsPredicate = DynamicPredicate
                 }
                 .navigationDestination(for: Pokemon.self) { pokemon in
-                    Text(pokemon.name!)
+                    PokemonDetail().environmentObject(pokemon)
                 }
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
