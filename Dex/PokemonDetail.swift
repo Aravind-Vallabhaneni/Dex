@@ -34,6 +34,10 @@ struct PokemonDetail: View {
                     }
                 } else {
                     (showShiny ? pokemon.shinyImage : pokemon.spriteImage)
+                        .interpolation(.none)
+                        .resizable()
+                        .padding(.top, 50)
+                        .shadow(color: .black, radius: 7)
                 }
             }
             HStack {
