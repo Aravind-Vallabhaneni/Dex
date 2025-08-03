@@ -25,4 +25,4 @@ Dex is an iOS application developed using SwiftUI that allows users to browse, s
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/SwiftDex.git
+   git clone https://github.com/your-username/Dex.git
