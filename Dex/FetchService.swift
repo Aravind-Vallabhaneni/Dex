@@ -15,7 +15,7 @@ struct FetchService {
     
     private let baseURL = URL(string: "https://pokeapi.co/api/v2/pokemon")!
     
-    func fetchPokemon(_ id: Int) async throws -> FetchedPokemon {
+    func fetchPokemon(_ id: Int) async throws -> Pokemon {
         
         let fetchURL = baseURL.appending(path: String(id))
         
@@ -29,7 +29,7 @@ struct FetchService {
         
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         
-        let pokemon = try decoder.decode(FetchedPokemon.self, from: data)
+        let pokemon = try decoder.decode(Pokemon.self, from: data)
         
         print("pokemon fetched : \(pokemon.id), name: \(pokemon.name)")
         return pokemon
