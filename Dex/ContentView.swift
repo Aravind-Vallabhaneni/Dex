@@ -17,21 +17,21 @@ struct ContentView: View {
     
   @State private var searchText: String = ""
   @State private var favorites: Bool = false
-    private var DynamicPredicate: NSPredicate {
-        var predicate: [NSPredicate] = []
+    
+    private var DynamicPredicate: Predicate<Pokemon> {
         
-        // predicate for the search text
-        
-        if !searchText.isEmpty {
-            predicate.append(NSPredicate(format: "name contains[c] %@" ,searchText))
+        #Predicate<Pokemon> { pokemon in
+            
+            if favorites && !searchText.isEmpty{
+                pokemon.favorite && pokemon.name.localizedStandardContains(searchText)
+            } else if !searchText.isEmpty {
+                pokemon.name.localizedStandardContains(searchText)
+            } else if favorites {
+                pokemon.favorite
+            } else {
+                true
+            }
         }
-        
-        // predicate for the favorites
-        if favorites {
-            predicate.append(NSPredicate(format: "favorite == %d", true))
-        }
-        
-        return NSCompoundPredicate(andPredicateWithSubpredicates: predicate)
     }
     
     var body: some View {
@@ -51,7 +51,7 @@ struct ContentView: View {
             NavigationStack{
                 List {
                     Section {
-                        ForEach(pokedex) { pokemon in
+                        ForEach((try? pokedex.filter(DynamicPredicate)) ?? pokedex) { pokemon in
                             NavigationLink(value: pokemon) {
                                 if pokemon.sprite == nil {
                                     AsyncImage(url: pokemon.spriteURL) { image in
@@ -125,14 +125,16 @@ struct ContentView: View {
                 .navigationTitle("Pokedex")
                 .searchable(text: $searchText, prompt: "find a pokemon")
                 .autocorrectionDisabled()
-                
+                .animation(.default, value: searchText)
                 .navigationDestination(for: Pokemon.self) { pokemon in
                     PokemonDetail(pokemon: pokemon)
                 }
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button {
-                            favorites.toggle()
+                            withAnimation {
+                                favorites.toggle()
+                            }
                         } label: {
                             Label("favorites", systemImage: favorites ? "star.fill" : "star")
                         }
