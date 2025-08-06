@@ -27,7 +27,7 @@ struct DexApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                
+                .modelContainer(for: Pokemon.self)
         }
     }
 }
